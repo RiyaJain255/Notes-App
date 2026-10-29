@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-app
+  labels:
+    app: notes-app
+spec:
+  replicas: 1            # SQLite is a single-file database, so we run 1 pod
+  selector:
+    matchLabels:
+      app: notes-app
+  template:
+    metadata:
+      labels:
+        app: notes-app
+    spec:
+      containers:
+        - name: notes-app
+          image: notes-app:latest
+          imagePullPolicy: IfNotPresent   # use the image built locally with docker build
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          volumeMounts:
+            - name: notes-data
+              mountPath: /data
+      volumes:
+        - name: notes-data
+          emptyDir: {}   # notes are kept while the pod lives (use a PVC for permanent storage)
